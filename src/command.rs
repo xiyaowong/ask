@@ -30,7 +30,7 @@ pub struct ConfigUseArgs {
     pub provider: AIProvider,
 }
 
-#[derive(ValueEnum, Debug, Clone, Copy, Deserialize, Serialize)]
+#[derive(ValueEnum, Debug, Clone, Copy, Deserialize, Serialize, PartialEq)]
 pub enum AIProvider {
     #[value(name = "deepseek")]
     DeepSeek,
