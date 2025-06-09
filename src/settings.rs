@@ -1,18 +1,20 @@
-use crate::command::AIProvider;
-use config::{Config, ConfigError, FileFormat};
+use crate::command::{AIModel, AIProvider};
+use anyhow::Result;
+use config::{Config, FileFormat};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::io::Error;
 use std::path;
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Settings {
     pub provider: Option<AIProvider>,
+    pub model: Option<AIModel>,
+    pub timeout: Option<u64>,
     pub presets: Option<HashMap<String, String>>,
     #[serde(skip_serializing)]
     pub deepseek_key: Option<String>,
     #[serde(skip_serializing)]
-    pub grok3_key: Option<String>,
+    pub grok_key: Option<String>,
 }
 
 impl Settings {
@@ -24,9 +26,10 @@ impl Settings {
         config_path.to_str().unwrap().to_string()
     }
 
-    pub fn load() -> Result<Settings, ConfigError> {
+    pub fn load() -> Result<Settings> {
         let config_path = Self::get_config_path();
-        Config::builder()
+
+        let result = Config::builder()
             .add_source(
                 config::File::with_name(&config_path)
                     .required(false)
@@ -34,22 +37,26 @@ impl Settings {
             )
             .add_source(config::Environment::with_prefix("ASK").ignore_empty(true))
             .build()?
-            .try_deserialize::<Settings>()
+            .try_deserialize::<Settings>()?;
+
+        Ok(result)
     }
 
-    pub fn save(&self) -> Result<(), Error> {
+    pub fn save(&self) -> Result<()> {
         let config_path = Self::get_config_path();
 
-        if !path::Path::new(&config_path).exists()
-            && self.provider.is_none()
-            && self.presets.is_none()
-            && self.deepseek_key.is_none()
-            && self.grok3_key.is_none()
+        if path::Path::new(&config_path).exists()
+            || self.provider.is_none()
+            || self.model.is_none()
+            || self.timeout.is_none()
+            || self.presets.is_none()
+            || self.deepseek_key.is_none()
+            || self.grok_key.is_none()
         {
-            Ok(())
-        } else {
             let json = serde_json::to_string_pretty(self)?;
-            std::fs::write(config_path, json)
+            std::fs::write(config_path, json)?;
         }
+
+        Ok(())
     }
 }

@@ -1,13 +1,18 @@
-﻿use serde_json::json;
+﻿use anyhow::Result;
+use serde_json::json;
 use std::collections::HashMap;
 use std::time::Duration;
 
-static SYSTEM_PROMPT: &str = "this is ask.";
-static REQUEST_TIMEOUT: Duration = Duration::from_secs(30);
+static SYSTEM_PROMPT: &str = "Your name is Ask, and you are a fast, concise command-line AI assistant. If two inputs are given, treat the first as a prompt preset. Reply in the user's language.";
+static DEFAULT_REQUEST_TIMEOUT: Duration = Duration::from_secs(60);
+static DEEPSEEK_API_URL: &str = "https://api.deepseek.com/chat/completions";
 
-pub fn deepseek(messages: &Vec<String>, api_key: &str) -> String {
-    let url = "https://api.deepseek.com/chat/completions";
-
+pub fn deepseek(
+    messages: &[String],
+    api_key: &str,
+    model: &str,
+    timeout: Option<u64>,
+) -> Result<String> {
     let mut messages: Vec<HashMap<String, String>> = messages
         .iter()
         .map(|m| {
@@ -26,9 +31,8 @@ pub fn deepseek(messages: &Vec<String>, api_key: &str) -> String {
         ]),
     );
 
-    // 构造请求体
     let body = json!({
-        "model": "deepseek-chat",
+        "model": model,
         "messages": messages,
         "stream": false
     });
@@ -36,34 +40,29 @@ pub fn deepseek(messages: &Vec<String>, api_key: &str) -> String {
     #[cfg(debug_assertions)]
     println!("{:#?}", body);
 
-    // return "".into();
-
-    let response = reqwest::blocking::Client::new()
-        .post(url)
-        .timeout(REQUEST_TIMEOUT)
+    let resp = reqwest::blocking::Client::new()
+        .post(DEEPSEEK_API_URL)
+        .timeout(
+            timeout
+                .map(|t| Duration::from_secs(t))
+                .unwrap_or(DEFAULT_REQUEST_TIMEOUT),
+        )
         .header("Content-Type", "application/json")
         .header("Authorization", format!("Bearer {api_key}"))
         .json(&body)
-        .send();
+        .send()?;
 
-    match response {
-        Ok(resp) => {
-            if resp.status().is_success() {
-                let json_resp = resp.json();
-                if let Err(err) = json_resp {
-                    return format!("Request failed: {err}");
-                }
-
-                let json_resp: serde_json::Value = json_resp.unwrap();
-                if let Some(reply) = json_resp["choices"][0]["message"]["content"].as_str() {
-                    reply.into()
-                } else {
-                    "No reply from assistant.".into()
-                }
-            } else {
-                format!("Request failed with status: {}", resp.status())
-            }
+    if resp.status().is_success() {
+        let json_resp: serde_json::Value = resp.json()?;
+        if let Some(reply) = json_resp["choices"][0]["message"]["content"].as_str() {
+            Ok(reply.into())
+        } else {
+            Err(anyhow::anyhow!("No reply from assistant."))
         }
-        Err(err) => format!("Error sending request: {err}"),
+    } else {
+        Err(anyhow::anyhow!(
+            "Request failed with status: {}",
+            resp.status()
+        ))
     }
 }
