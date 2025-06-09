@@ -110,24 +110,26 @@ fn handle_preset_command(cmd: command::PresetCommand, settings: &mut Settings) -
 fn handle_config_command(cmd: ConfigCommand, settings: &mut Settings) -> Result<()> {
     match cmd.command {
         command::ConfigSubcommand::Show => {
-            println!("Current configuration:");
-            if let Some(provider) = &settings.provider {
-                println!("provider: {:?}", provider);
-            } else {
-                println!("provider: ");
-            }
+            let provider = settings
+                .provider
+                .as_ref()
+                .map(|p| format!("{:?}", p))
+                .unwrap_or("".to_string());
 
-            if let Some(model) = &settings.model {
-                println!("model: {:?}", model);
-            } else {
-                println!("model:");
-            }
+            let model = settings
+                .model
+                .as_ref()
+                .map(|m| format!("{:?}", m))
+                .unwrap_or("".to_string());
 
-            if let Some(timeout) = &settings.timeout {
-                println!("timeout: {} seconds", timeout);
-            } else {
-                println!("timeout:");
-            }
+            let timeout = settings
+                .timeout
+                .map(|t| t.to_string())
+                .unwrap_or("".to_string());
+
+            println!("provider => {provider}");
+            println!("model => {model}");
+            println!("timeout => {timeout}");
         }
         command::ConfigSubcommand::Provider(args) => {
             settings.provider = Some(args.provider);
