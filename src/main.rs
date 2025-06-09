@@ -5,6 +5,7 @@ mod settings;
 use crate::command::{AIProvider, AskArgsParser, ConfigCommand};
 use crate::settings::Settings;
 use anyhow::{Context, Ok, Result};
+use ask::dprintln;
 use clap::{CommandFactory, Parser};
 use command::AIModel;
 use indicatif::{ProgressBar, ProgressStyle};
@@ -17,8 +18,7 @@ fn main() -> Result<()> {
     // Load settings
     let mut settings = Settings::load().with_context(|| "Failed to load settings")?;
 
-    #[cfg(debug_assertions)]
-    println!("\n==========\n{:#?}\n==========\n", settings);
+    dprintln!("{:#?}", settings);
 
     // Parse command line arguments
 
@@ -45,8 +45,7 @@ fn main() -> Result<()> {
 
         let args = AskArgsParser::parse();
 
-        #[cfg(debug_assertions)]
-        println!("\n==========\n{:#?}\n==========\n", args);
+        dprintln!("{:#?}", args);
 
         match args.command {
             command::AskCommand::Config(cmd) => handle_config_command(cmd, &mut settings)?,
@@ -172,8 +171,7 @@ fn handle_question(preset: String, question: String, settings: &Settings) -> Res
         .filter(|msg| !msg.is_empty())
         .collect::<Vec<String>>();
 
-    #[cfg(debug_assertions)]
-    println!("\n=============\nmessages: {:?}\n=============\n", messages);
+    dprintln!("messages: {:?}", messages);
 
     stdout().flush().unwrap();
     let spinner = ProgressBar::new_spinner();
