@@ -1,5 +1,7 @@
 #![allow(dead_code)]
 
+use std::fmt::Display;
+
 use clap::{Args, Parser};
 use clap::{Subcommand, ValueEnum};
 use serde::{Deserialize, Serialize};
@@ -7,17 +9,43 @@ use serde::{Deserialize, Serialize};
 #[derive(ValueEnum, Debug, Clone, Copy, Deserialize, Serialize, PartialEq)]
 pub enum AIProvider {
     #[value(name = "deepseek")]
+    #[serde(rename = "deepseek")]
     DeepSeek,
+
     #[value(name = "grok")]
+    #[serde(rename = "grok")]
     Grok,
+}
+
+impl Display for AIProvider {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let name = match self {
+            AIProvider::DeepSeek => "deepseek",
+            AIProvider::Grok => "grok",
+        };
+        write!(f, "{}", name)
+    }
 }
 
 #[derive(ValueEnum, Debug, Clone, Copy, Deserialize, Serialize, PartialEq)]
 pub enum AIModel {
     #[value(name = "deepseek-chat")]
+    #[serde(rename = "deepseek-chat")]
     DeepSeekChat,
+
     #[value(name = "grok-3")]
+    #[serde(rename = "grok-3")]
     Grok3,
+}
+
+impl Display for AIModel {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let name = match self {
+            AIModel::DeepSeekChat => "deepseek-chat",
+            AIModel::Grok3 => "grok-3",
+        };
+        write!(f, "{}", name)
+    }
 }
 
 impl AIModel {

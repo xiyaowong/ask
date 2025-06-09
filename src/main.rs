@@ -113,13 +113,13 @@ fn handle_config_command(cmd: ConfigCommand, settings: &mut Settings) -> Result<
             let provider = settings
                 .provider
                 .as_ref()
-                .map(|p| format!("{:?}", p))
+                .map(|p| p.to_string())
                 .unwrap_or("".to_string());
 
             let model = settings
                 .model
                 .as_ref()
-                .map(|m| format!("{:?}", m))
+                .map(|m| m.to_string())
                 .unwrap_or("".to_string());
 
             let timeout = settings
@@ -133,7 +133,7 @@ fn handle_config_command(cmd: ConfigCommand, settings: &mut Settings) -> Result<
         }
         command::ConfigSubcommand::Provider(args) => {
             settings.provider = Some(args.provider);
-            println!("AI provider set to: {:?}", args.provider);
+            println!("AI provider set to: {}", args.provider);
         }
         command::ConfigSubcommand::Timeout(args) => {
             settings.timeout = Some(args.timeout);
@@ -141,7 +141,7 @@ fn handle_config_command(cmd: ConfigCommand, settings: &mut Settings) -> Result<
         }
         command::ConfigSubcommand::Model(args) => {
             settings.model = Some(args.model);
-            println!("AI model set to: {:?}", args.model);
+            println!("AI model set to: {}", args.model);
         }
     }
 
