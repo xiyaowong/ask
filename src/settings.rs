@@ -7,12 +7,22 @@ use std::path;
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Settings {
+    /// The AI provider to use for questions
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub provider: Option<AIProvider>,
+    /// The AI model to use for questions
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub model: Option<AIModel>,
+    /// The timeout for AI requests in seconds
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub timeout: Option<u64>,
+    /// Presets for common questions
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub presets: Option<HashMap<String, String>>,
+    /// DeepSeek API key
     #[serde(skip_serializing)]
     pub deepseek_key: Option<String>,
+    /// Grok API key
     #[serde(skip_serializing)]
     pub grok_key: Option<String>,
 }
