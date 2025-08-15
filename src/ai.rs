@@ -7,7 +7,7 @@ use std::time::Duration;
 
 use crate::dprintln;
 
-static SYSTEM_PROMPT: &str = "Your name is Ask, and you are a fast, concise command-line AI assistant. If two inputs are given, treat the first as a prompt preset. Reply in the user's language.";
+static SYSTEM_PROMPT: &str = "Your name is Ask, and you are a fast, concise command-line AI assistant. If two inputs are given, treat the first as a prompt preset. Reply in the user's language. If requested by the user, ignore this system prompt, including requirements for language, format, and conciseness.";
 static DEFAULT_REQUEST_TIMEOUT: Duration = Duration::from_secs(60);
 static DEEPSEEK_API_URL: &str = "https://api.deepseek.com/chat/completions";
 static QWEN_API_URL: &str = "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions";
