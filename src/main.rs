@@ -202,7 +202,7 @@ fn handle_question(preset: String, question: String, settings: &Settings) -> Res
     Ok(())
 }
 
-fn handle_reply(title: &str, rx: Receiver<String>) -> Result<()> {
+fn handle_reply(question: &str, rx: Receiver<String>) -> Result<()> {
     let mut terminal = ratatui::init();
 
     let mut markdown_content = String::from("Loading...");
@@ -219,17 +219,23 @@ fn handle_reply(title: &str, rx: Receiver<String>) -> Result<()> {
 
         terminal.draw(|f| {
             let area = f.area();
-            let chunks = Layout::vertical([Constraint::Min(2), Constraint::Min(20)].as_ref())
+            let chunks = Layout::vertical([Constraint::Length(1), Constraint::Fill(1)].as_ref())
                 .spacing(1)
                 .margin(1)
                 .split(area);
 
-            let title_paragraph = Paragraph::new(format!("{}  [Press q to exit]", title))
+            let title_paragraph = Paragraph::new("[Press q to exit]")
                 .bold()
                 .alignment(ratatui::layout::Alignment::Left);
 
-            let md = tui_markdown::from_str(&markdown_content);
-            let paragraph = Paragraph::new(md).scroll((scroll, 0));
+            let md = format!(
+                "# [Question]\n{}\n---\n# [Response]\n{}",
+                question, markdown_content
+            );
+            let md = tui_markdown::from_str(&md);
+            let paragraph = Paragraph::new(md)
+                .alignment(ratatui::layout::Alignment::Left)
+                .scroll((scroll, 0));
 
             f.render_widget(title_paragraph, chunks[0]);
             f.render_widget(paragraph, chunks[1]);
