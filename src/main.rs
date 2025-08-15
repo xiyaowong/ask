@@ -219,7 +219,7 @@ fn handle_reply(title: &str, rx: Receiver<String>) -> Result<()> {
 
         terminal.draw(|f| {
             let area = f.area();
-            let chunks = Layout::vertical([Constraint::Length(1), Constraint::Min(1)].as_ref())
+            let chunks = Layout::vertical([Constraint::Min(2), Constraint::Min(20)].as_ref())
                 .spacing(1)
                 .margin(1)
                 .split(area);
