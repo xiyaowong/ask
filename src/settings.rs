@@ -25,6 +25,9 @@ pub struct Settings {
     /// Grok API key
     #[serde(skip_serializing)]
     pub grok_key: Option<String>,
+    // Qwen API key
+    #[serde(skip_serializing)]
+    pub qwen_key: Option<String>,
 }
 
 impl Settings {

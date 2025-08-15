@@ -15,6 +15,10 @@ pub enum AIProvider {
     #[value(name = "grok")]
     #[serde(rename = "grok")]
     Grok,
+
+    #[value(name = "qwen")]
+    #[serde(rename = "qwen")]
+    Qwen,
 }
 
 impl Display for AIProvider {
@@ -22,6 +26,7 @@ impl Display for AIProvider {
         let name = match self {
             AIProvider::DeepSeek => "deepseek",
             AIProvider::Grok => "grok",
+            AIProvider::Qwen => "qwen",
         };
         write!(f, "{}", name)
     }
@@ -36,14 +41,19 @@ pub enum AIModel {
     #[value(name = "grok-3")]
     #[serde(rename = "grok-3")]
     Grok3,
+
+    #[value(name = "qwen-plus")]
+    #[serde(rename = "qwen-plus")]
+    QwenPlus,
+
+    #[value(name = "qwen-flash")]
+    #[serde(rename = "qwen-flash")]
+    QwenFlash,
 }
 
 impl Display for AIModel {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let name = match self {
-            AIModel::DeepSeekChat => "deepseek-chat",
-            AIModel::Grok3 => "grok-3",
-        };
+        let name = self.name();
         write!(f, "{}", name)
     }
 }
@@ -53,6 +63,8 @@ impl AIModel {
         match self {
             AIModel::DeepSeekChat => "deepseek-chat",
             AIModel::Grok3 => "grok-3",
+            AIModel::QwenPlus => "qwen-plus",
+            AIModel::QwenFlash => "qwen-flash",
         }
     }
 }
@@ -69,6 +81,7 @@ Environment Variables for API Keys
 
   - DeepSeek - export ASK_DEEPSEEK_KEY={your key}
   - Grok - export ASK_GROK_KEY={your key}
+  - Qwen - export ASK_QWEN_KEY={your key}
 
 Examples:
 

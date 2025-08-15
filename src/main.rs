@@ -194,6 +194,11 @@ fn handle_question(preset: String, question: String, settings: &Settings) -> Res
         AIProvider::Grok => {
             todo!()
         }
+        AIProvider::Qwen => {
+            let key = settings.qwen_key.as_ref().unwrap();
+            let model = settings.model.as_ref().unwrap().name();
+            ai::qwen(&messages, key, model, settings.timeout)?
+        }
     };
 
     spinner.finish();
@@ -237,6 +242,20 @@ fn validate_ai_settings(settings: &Settings) -> Result<()> {
                 AIModel::Grok3 => {}
                 _ => {
                     return Err(anyhow::anyhow!("Grok provider only supports Grok3 model"));
+                }
+            }
+        }
+        AIProvider::Qwen => {
+            if settings.qwen_key.is_none() {
+                return Err(anyhow::anyhow!("Qwen API key is not set"));
+            }
+
+            match settings.model.unwrap() {
+                AIModel::QwenPlus | AIModel::QwenFlash => {}
+                _ => {
+                    return Err(anyhow::anyhow!(
+                        "Qwen provider only supports QwenPlus and QwenFlash models"
+                    ));
                 }
             }
         }
