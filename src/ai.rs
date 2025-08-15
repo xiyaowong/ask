@@ -2,6 +2,7 @@
 use serde_json::json;
 use std::collections::HashMap;
 use std::io::{BufRead, BufReader};
+use std::sync::mpsc;
 use std::time::Duration;
 
 use crate::dprintln;
@@ -17,7 +18,7 @@ fn openai(
     timeout: Option<u64>,
     api_url: &str,
     api_key: &str,
-) -> Result<String> {
+) -> Result<mpsc::Receiver<String>> {
     let mut messages: Vec<HashMap<String, String>> = messages
         .iter()
         .map(|m| {
@@ -56,10 +57,20 @@ fn openai(
         .json(&body)
         .send()?;
 
-    if resp.status().is_success() {
-        let mut result = String::new();
-        let mut lines = BufReader::new(resp).lines();
+    if !resp.status().is_success() {
+        return Err(anyhow::anyhow!(
+            "Request failed with status: {} {:?}",
+            resp.status(),
+            resp.text().unwrap_or_default()
+        ));
+    }
 
+    let (tx, rx) = mpsc::channel();
+
+    let mut result = String::new();
+    let mut lines = BufReader::new(resp).lines();
+
+    std::thread::spawn(move || {
         while let Some(Ok(line)) = lines.next() {
             if line.starts_with("data: ") {
                 let json_str = &line[6..];
@@ -69,19 +80,14 @@ fn openai(
                 if let Ok(json) = serde_json::from_str::<serde_json::Value>(json_str) {
                     if let Some(content) = json["choices"][0]["delta"]["content"].as_str() {
                         result.push_str(content);
-                        std::io::Write::flush(&mut std::io::stdout()).ok();
+                        tx.send(result.clone()).ok();
                     }
                 }
             }
         }
-        Ok(result)
-    } else {
-        Err(anyhow::anyhow!(
-            "Request failed with status: {} {:?}",
-            resp.status(),
-            resp.text().unwrap_or_default()
-        ))
-    }
+    });
+
+    Ok(rx)
 }
 
 pub fn deepseek(
@@ -89,7 +95,7 @@ pub fn deepseek(
     api_key: &str,
     model: &str,
     timeout: Option<u64>,
-) -> Result<String> {
+) -> Result<mpsc::Receiver<String>> {
     openai(messages, model, timeout, DEEPSEEK_API_URL, api_key)
 }
 
@@ -98,6 +104,6 @@ pub fn qwen(
     api_key: &str,
     model: &str,
     timeout: Option<u64>,
-) -> Result<String> {
+) -> Result<mpsc::Receiver<String>> {
     openai(messages, model, timeout, QWEN_API_URL, api_key)
 }

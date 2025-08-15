@@ -8,10 +8,15 @@ use anyhow::{Context, Ok, Result};
 use ask::dprintln;
 use clap::{CommandFactory, Parser};
 use command::AIModel;
-use indicatif::{ProgressBar, ProgressStyle};
+use ratatui::crossterm::event;
+use ratatui::crossterm::event::{Event, KeyCode};
+use ratatui::layout::{Constraint, Layout};
+use ratatui::style::Stylize;
+use ratatui::widgets::Paragraph;
 use std::collections::HashMap;
 use std::io::{Write, stdout};
 use std::process::exit;
+use std::sync::mpsc::Receiver;
 use std::time::Duration;
 
 fn main() -> Result<()> {
@@ -176,14 +181,6 @@ fn handle_question(preset: String, question: String, settings: &Settings) -> Res
     dprintln!("messages: {:?}", messages);
 
     stdout().flush().unwrap();
-    let spinner = ProgressBar::new_spinner();
-    spinner.set_style(
-        ProgressStyle::default_spinner()
-            .tick_strings(&["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"])
-            .template("{spinner}")
-            .unwrap(),
-    );
-    spinner.enable_steady_tick(Duration::from_millis(100));
 
     let reply = match settings.provider.unwrap() {
         AIProvider::DeepSeek => {
@@ -201,11 +198,62 @@ fn handle_question(preset: String, question: String, settings: &Settings) -> Res
         }
     };
 
-    spinner.finish();
+    handle_reply(&question.as_ref(), reply)?;
+    Ok(())
+}
 
-    if !reply.is_empty() {
-        termimad::print_text(reply.as_str());
+fn handle_reply(title: &str, rx: Receiver<String>) -> Result<()> {
+    let mut terminal = ratatui::init();
+
+    let mut markdown_content = String::from("Loading...");
+    let mut scroll = 0;
+
+    loop {
+        rx.recv()
+            .map(|content| {
+                markdown_content = content;
+            })
+            .unwrap_or_else(|_| {
+                return;
+            });
+
+        terminal.draw(|f| {
+            let area = f.area();
+            let chunks = Layout::vertical([Constraint::Length(1), Constraint::Min(1)].as_ref())
+                .spacing(1)
+                .margin(1)
+                .split(area);
+
+            let title_paragraph = Paragraph::new(format!("{}  [Press q to exit]", title))
+                .bold()
+                .alignment(ratatui::layout::Alignment::Left);
+
+            let md = tui_markdown::from_str(&markdown_content);
+            let paragraph = Paragraph::new(md).scroll((scroll, 0));
+
+            f.render_widget(title_paragraph, chunks[0]);
+            f.render_widget(paragraph, chunks[1]);
+        })?;
+
+        if event::poll(Duration::from_millis(50))? {
+            if let Event::Key(key) = event::read()? {
+                match key.code {
+                    KeyCode::Char('q') => break,
+                    KeyCode::Up => {
+                        if scroll > 0 {
+                            scroll -= 1;
+                        }
+                    }
+                    KeyCode::Down => {
+                        scroll += 1;
+                    }
+                    _ => {}
+                }
+            }
+        }
     }
+
+    ratatui::restore();
 
     Ok(())
 }
