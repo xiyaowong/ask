@@ -229,7 +229,7 @@ fn handle_reply(question: &str, rx: Receiver<String>) -> Result<()> {
                 .alignment(ratatui::layout::Alignment::Left);
 
             let md = format!(
-                "# [Question]\n{}\n---\n# [Response]\n{}",
+                "# [Question]\n\n{}\n\n---\n\n# [Response]\n\n{}",
                 question, markdown_content
             );
             let md = tui_markdown::from_str(&md);
