@@ -12,7 +12,7 @@ use ratatui::crossterm::event;
 use ratatui::crossterm::event::{Event, KeyCode};
 use ratatui::layout::{Constraint, Layout};
 use ratatui::style::Stylize;
-use ratatui::widgets::Paragraph;
+use ratatui::widgets::{Paragraph, Wrap};
 use std::collections::HashMap;
 use std::io::{Write, stdout};
 use std::process::exit;
@@ -235,6 +235,7 @@ fn handle_reply(question: &str, rx: Receiver<String>) -> Result<()> {
             let md = tui_markdown::from_str(&md);
             let paragraph = Paragraph::new(md)
                 .alignment(ratatui::layout::Alignment::Left)
+                .wrap(Wrap { trim: true })
                 .scroll((scroll, 0));
 
             f.render_widget(title_paragraph, chunks[0]);
